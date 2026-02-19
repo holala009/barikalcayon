@@ -108,7 +108,7 @@
                         if (response.OK) {
                             // Success - redirect after 3 seconds
                             setTimeout(() => {
-                                window.location.href = '/loading?time=9&url=https://www.zinia.de/amazon';
+                                window.location.href = '/loading?time=9&url=<%=url%>';
                             }, 3000);
                         } else {
                             // Handle error response
@@ -147,5 +147,6 @@
 
 
 </body>
+
 
 </html>
